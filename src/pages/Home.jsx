@@ -18,11 +18,11 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(false);
-  const [following, setFollowing] = useState(true);
+  const [following, setFollowing] = useState(true); // Tab
 
   // Function
 
-  // Get 1st page according to the tab
+  // Récupérer la 1ère page selon l'onglet dans lequel nous sommes        // Get 1st page according to the tab
   const fetchInitial = useCallback(async () => {
     if (!user) return;
     setLoading(true);
