@@ -35,9 +35,6 @@ export default function TweetCard({ tweet, onDeleted }) {
       onClick={() => navigate(`/tweet/${tweet.id}`)}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) =>
-        (e.key === "Enter" || e.key === " ") && navigate(`/tweet/${tweet.id}`)
-      }
     >
       <div className="flex items-center mb-2">
         <img
