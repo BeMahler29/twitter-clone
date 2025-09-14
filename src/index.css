@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+html {
+  box-sizing: border-box;
+  @apply bg-gray-100;
+}
+
+.form {
+  @apply bg-white p-6 rounded-xl shadow-md w-full max-w-sm;
+}
+
+.input {
+  @apply mt-1 block w-full px-3 py-2 border rounded;
+}
