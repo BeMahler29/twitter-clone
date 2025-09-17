@@ -92,8 +92,8 @@ export default function TweetCard({ tweet, onDeleted }) {
                 return;
               try {
                 await deleteTweetThread(tweet.id);
-                toast.success("Tweet supprimé !");
-                onDeleted && onDeleted();
+                  toast.success("Tweet supprimé !");
+                  onDeleted && onDeleted();
               } catch (error) {
                 toast.error("Erreur lors de la suppression : " + error.message);
               }
@@ -111,11 +111,6 @@ export default function TweetCard({ tweet, onDeleted }) {
           className="text-blue-500 text-sm hover:underline"
         >
           Répondre
-          {replyCount > 0 && (
-            <span className="ml-1 bg-blue-500 text-white rounded-full text-xs px-2 py-0.5">
-              {replyCount}
-            </span>
-          )}
         </Link>
       </div>
     </div>
