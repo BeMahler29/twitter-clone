@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { postTweet } from "../../firebaseFunctions/tweets";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";

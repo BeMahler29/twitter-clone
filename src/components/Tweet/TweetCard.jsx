@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { deleteDoc, doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from "firebase/firestore";
+import { deleteTweetThread } from "../../firebaseFunctions/tweets";
 import { firestore } from "../../firebase";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,12 +17,13 @@ import anonymous from "../../assets/anonymous.jpg";
 export default function TweetCard({ tweet, onDeleted }) {
   // Variable
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // State
   const [author, setAuthor] = useState(null);
-  const navigate = useNavigate();
+  const [replyCount, setReplyCount] = useState(0);
 
-  // Cycle
+  // Cycles
   useEffect(() => {
     async function fetchAuthor() {
       const userDoc = await getDoc(doc(firestore, "users", tweet.authorId));
@@ -22,6 +31,18 @@ export default function TweetCard({ tweet, onDeleted }) {
     }
     fetchAuthor();
   }, [tweet.authorId]);
+
+  // Mise à jour en temps réel du nombre de réponses                        // Realtime replies counter update
+  useEffect(() => {
+    const repliesRef = collection(firestore, "tweets");
+    const q = query(repliesRef, where("replyTo", "==", tweet.id));
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setReplyCount(snap.size);
+    });
+
+    return () => unsubscribe();
+  }, [tweet.id]);
 
   //  Function
 
@@ -63,23 +84,19 @@ export default function TweetCard({ tweet, onDeleted }) {
         {user && user.uid === tweet.authorId && (
           <button
             className="ml-auto text-red-500 hover:underline text-sm"
-            onClick={(e) => {
+            onClick={async (e) => {
               stop(e);
-              // suppression inchangée
               if (
                 !window.confirm("Etes-vous sûr de vouloir supprimer ce tweet ?")
               )
                 return;
-              deleteDoc(doc(firestore, "tweets", tweet.id))
-                .then(() => {
-                  toast.success("Tweet supprimé !");
-                  onDeleted && onDeleted();
-                })
-                .catch((error) =>
-                  toast.error(
-                    "Erreur lors de la suppression : " + error.message
-                  )
-                );
+              try {
+                await deleteTweetThread(tweet.id);
+                toast.success("Tweet supprimé !");
+                onDeleted && onDeleted();
+              } catch (error) {
+                toast.error("Erreur lors de la suppression : " + error.message);
+              }
             }}
           >
             Supprimer
@@ -94,6 +111,11 @@ export default function TweetCard({ tweet, onDeleted }) {
           className="text-blue-500 text-sm hover:underline"
         >
           Répondre
+          {replyCount > 0 && (
+            <span className="ml-1 bg-blue-500 text-white rounded-full text-xs px-2 py-0.5">
+              {replyCount}
+            </span>
+          )}
         </Link>
       </div>
     </div>

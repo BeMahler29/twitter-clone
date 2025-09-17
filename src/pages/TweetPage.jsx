@@ -1,12 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { firestore } from "../firebase";
 import {
   collection,
   doc,
-  getDoc,
-  getDocs,
+  onSnapshot,
   orderBy,
   query,
   where,
@@ -35,48 +34,48 @@ export default function TweetPage() {
   const [loading, setLoading] = useState(true);
 
   // Cycle
-  const fetchTweet = useCallback(async () => {
-    setLoading(true);
-    try {
-      //récupère le tweet principal                                       // Get the Main Tweet
-      const tweetDoc = await getDoc(doc(firestore, "tweets", tweetId));
-      if (tweetDoc.exists()) {
-        setMainTweet({ id: tweetDoc.id, ...tweetDoc.data() });
-      }
-      // Récupère les réponses                                            // Get the replies
-      const repliesRef = collection(firestore, "tweets");
-      const q = query(
-        repliesRef,
-        where("replyTo", "==", tweetId),
-        orderBy("createdAt", "asc")
-      );
-      const snap = await getDocs(q);
-      setReplies(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors du chargement du tweet :" + error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [tweetId]);
 
+  // Live: tweet principal + réponses
   useEffect(() => {
-    fetchTweet();
-  }, [fetchTweet]);
+    setLoading(true);
+
+    // live du tweet principal
+    const unsubTweet = onSnapshot(doc(firestore, "tweets", tweetId), (snap) => {
+      if (snap.exists()) {
+        setMainTweet({ id: snap.id, ...snap.data() });
+      } else {
+        setMainTweet(null);
+      }
+      setLoading(false);
+    });
+
+    // live des réponses directes
+    const repliesRef = collection(firestore, "tweets");
+    const q = query(
+      repliesRef,
+      where("replyTo", "==", tweetId),
+      orderBy("createdAt", "asc")
+    );
+    const unsubReplies = onSnapshot(q, (snap) => {
+      setReplies(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => {
+      unsubTweet();
+      unsubReplies();
+    };
+  }, [tweetId]);
 
   // function
   const onReply = async ({ content }) => {
     try {
       await postTweet(user.uid, content, tweetId);
       toast.success("Réponse postée !");
-      reset();
-
-      fetchTweet();
+      reset(); // la liste se mettra à jour via onSnapshot
     } catch (error) {
-      toast.error("Erreur réponse :" + error.message);
+      toast.error("Erreur réponse : " + error.message);
     }
   };
-
   if (loading) return <Spinner />;
 
   if (!mainTweet) return <p>Ce tweet n'existe pas</p>;
