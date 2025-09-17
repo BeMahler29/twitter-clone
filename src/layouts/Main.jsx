@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
@@ -6,8 +6,9 @@ import Footer from "../components/Footer/Footer";
 export default function Main() {
   // Variables
   const { user } = useAuth();
+  const location = useLocation();
 
-  if (!user) {
+  if (location.pathname === "/login" || location.pathname === "/signup") {
     return (
       <main>
         <div>
