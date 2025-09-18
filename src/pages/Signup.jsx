@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import Logo from "../components/Logo/Logo";
 import { toast } from "react-toastify";
+import { useEffect } from "react";
 
 export default function Signup() {
   // Variables
@@ -12,15 +13,22 @@ export default function Signup() {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const { signup } = useAuth();
+  const { signup, user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Cycle
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   // Fonction
   const onSubmit = async ({ email, password, displayName }) => {
     try {
       await signup(email, password, displayName);
       toast.success("Compte crée !");
-      navigate("/");
     } catch (error) {
       toast.error("Erreur: " + error.message);
     }

@@ -39,6 +39,9 @@ export function AuthProvider({ children }) {
     // MAJ du profil Firebase Auth        // Update Firebase Profile
     await updateProfile(credentials.user, { displayName });
 
+    await credentials.user.reload();
+    setUser(auth.currentUser);
+
     // Création du doc utilisateur dans Firestore     // Create doc users in Firestore
     const userDocRef = doc(firestore, "users", credentials.user.uid);
     await setDoc(userDocRef, {

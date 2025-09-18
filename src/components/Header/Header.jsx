@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import Logo from "../Logo/Logo";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export default function Header() {
@@ -11,6 +11,32 @@ export default function Header() {
 
   //   State
   const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState("");
+
+  // Cycle
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!user) return;
+      if (user.displayName) {
+        setName(user.displayName);
+        return;
+      }
+      const snap = await getDoc(doc(firestore, "users", user.uid));
+      if (!cancelled && snap.exists()) {
+        setName(snap.data().displayName || "");
+      }
+    }
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const initial = // fallback of username
+    name?.trim()?.[0]?.toUpperCase() ||
+    user?.email?.trim()?.[0]?.toUpperCase() ||
+    "?";
 
   // Fonction
   const handleLogout = async () => {
@@ -67,7 +93,7 @@ export default function Header() {
             onClick={toggleDropdown}
             className="w-15 h-15 rounded-full bg-amber-600 text-white text-xl hover:bg-amber-700 cursor-pointer"
           >
-            {user.displayName?.charAt(0).toUpperCase() || "?"}
+            {initial}
           </button>
         </div>
       )}
